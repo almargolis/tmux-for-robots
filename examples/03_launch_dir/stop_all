@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+#
+# Stop every node started by the launch_* scripts -- politely (Ctrl-C first,
+# so nodes can stop motors and close files), newest first, broker last.
+#
+set -uo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MUX="${MUX:-tmux}"
+# shellcheck source=_screen_session.sh
+source "$HERE/_screen_session.sh"
+
+for SESSION in teleop motors navigator camera lidar broker; do
+    if [ "$MUX" = screen ]; then
+        if screen_has_session "$SESSION"; then
+            screen_signal_session "$SESSION"                 # Ctrl-C
+            sleep 0.5
+            screen_quit_session "$SESSION" && echo "stopped '$SESSION'"
+        else
+            echo "'$SESSION' not running"
+        fi
+    else
+        if tmux has-session -t "=$SESSION" 2>/dev/null; then
+            tmux send-keys -t "=$SESSION:" C-c
+            sleep 0.5
+            tmux kill-session -t "=$SESSION" && echo "stopped '$SESSION'"
+        else
+            echo "'$SESSION' not running"
+        fi
+    fi
+done

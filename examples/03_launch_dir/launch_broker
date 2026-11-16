@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+#
+# Start the message broker in a detached session "broker" (-f: run here).
+# START THIS FIRST -- every other node connects to it.
+# See _launch_common.sh for how it works.
+#
+SESSION=broker
+NODE_CMD="python3 broker.py"
+# shellcheck source=_launch_common.sh
+source "$(dirname "${BASH_SOURCE[0]}")/_launch_common.sh"

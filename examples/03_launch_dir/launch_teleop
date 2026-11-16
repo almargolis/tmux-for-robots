@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+#
+# Start the keyboard e-stop. Interactive, so it runs in THIS terminal by
+# default (-d to detach it). Only useful when tethered, so launch_all skips it.
+# See _launch_common.sh for how it works.
+#
+SESSION=teleop
+NODE_CMD="python3 teleop.py"
+NEEDS_PORT=${MINIBUS_PORT:-7777}              # wait for the broker
+LAUNCH_DEFAULT=foreground
+# shellcheck source=_launch_common.sh
+source "$(dirname "${BASH_SOURCE[0]}")/_launch_common.sh"

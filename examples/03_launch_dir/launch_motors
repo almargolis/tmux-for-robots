@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+#
+# Start the motor driver in a detached session "motors" (-f: run here).
+# Waits for the broker before starting.
+# See _launch_common.sh for how it works.
+#
+SESSION=motors
+NODE_CMD="python3 motors.py"
+NEEDS_PORT=${MINIBUS_PORT:-7777}              # wait for the broker
+# shellcheck source=_launch_common.sh
+source "$(dirname "${BASH_SOURCE[0]}")/_launch_common.sh"

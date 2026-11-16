@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+#
+# Start every background node, in order, each in its own session.
+# Safe to re-run: nodes that are already running are left alone.
+#
+#   ./launch_all              tmux (default)
+#   MUX=screen ./launch_all   GNU screen
+#
+# Order is handled by the nodes themselves: each one that needs the broker
+# waits for its port (NEEDS_PORT) -- no "sleep 2 and hope".
+#
+# teleop is interactive, so it is NOT started here. If you are tethered,
+# run ./launch_teleop yourself in a spare terminal.
+#
+set -euo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+"$HERE/launch_broker"
+"$HERE/launch_lidar"
+"$HERE/launch_camera"
+"$HERE/launch_navigator"
+"$HERE/launch_motors"
+
+echo
+"$HERE/status"

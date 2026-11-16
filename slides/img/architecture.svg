@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 460" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 z" fill="#8ab4f8"/>
+    </marker>
+  </defs>
+
+  <!-- laptop -->
+  <rect x="30" y="70" width="300" height="310" rx="14" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+  <text x="180" y="108" text-anchor="middle" fill="#c9d1d9" font-size="22" font-weight="700">your laptop</text>
+  <rect x="65" y="140" width="230" height="90" rx="8" fill="#0d1117" stroke="#8ab4f8" stroke-width="1.5"/>
+  <text x="180" y="172" text-anchor="middle" fill="#8ab4f8" font-size="17">terminal / SSH client</text>
+  <text x="180" y="199" text-anchor="middle" fill="#8b949e" font-size="14">disposable window</text>
+
+  <!-- link -->
+  <line x1="330" y1="210" x2="470" y2="210" stroke="#8ab4f8" stroke-width="4" marker-end="url(#arrow)"/>
+  <text x="400" y="192" text-anchor="middle" fill="#8ab4f8" font-size="15">ssh</text>
+  <text x="400" y="236" text-anchor="middle" fill="#8b949e" font-size="13">can drop</text>
+
+  <!-- robot -->
+  <rect x="480" y="40" width="590" height="390" rx="14" fill="#161b22" stroke="#30363d" stroke-width="2"/>
+  <text x="775" y="78" text-anchor="middle" fill="#c9d1d9" font-size="22" font-weight="700">robot</text>
+
+  <!-- tmux server -->
+  <rect x="515" y="100" width="520" height="300" rx="10" fill="#0d1117" stroke="#66d9a6" stroke-width="2"/>
+  <text x="775" y="130" text-anchor="middle" fill="#66d9a6" font-size="17" font-weight="700">tmux server  (keeps running)</text>
+
+  <!-- session box -->
+  <rect x="545" y="150" width="460" height="220" rx="8" fill="#161b22" stroke="#30363d"/>
+  <text x="775" y="176" text-anchor="middle" fill="#c9d1d9" font-size="15">session: robot</text>
+
+  <!-- panes -->
+  <g font-size="14">
+    <rect x="565" y="195" width="205" height="60" rx="5" fill="#0d1117" stroke="#ffb454"/>
+    <text x="667" y="220" text-anchor="middle" fill="#ffb454">window 1 · pane A</text>
+    <text x="667" y="242" text-anchor="middle" fill="#8b949e">broker.py</text>
+
+    <rect x="785" y="195" width="200" height="60" rx="5" fill="#0d1117" stroke="#ffb454"/>
+    <text x="885" y="220" text-anchor="middle" fill="#ffb454">window 1 · pane B</text>
+    <text x="885" y="242" text-anchor="middle" fill="#8b949e">navigator.py</text>
+
+    <rect x="565" y="270" width="205" height="60" rx="5" fill="#0d1117" stroke="#ffb454"/>
+    <text x="667" y="295" text-anchor="middle" fill="#ffb454">window 2 · pane A</text>
+    <text x="667" y="317" text-anchor="middle" fill="#8b949e">camera.py</text>
+
+    <rect x="785" y="270" width="200" height="60" rx="5" fill="#0d1117" stroke="#ffb454"/>
+    <text x="885" y="295" text-anchor="middle" fill="#ffb454">window 2 · pane B</text>
+    <text x="885" y="317" text-anchor="middle" fill="#8b949e">motors.py</text>
+  </g>
+  <text x="775" y="368" text-anchor="middle" fill="#8b949e" font-size="14">their parent is the tmux server, not your SSH session</text>
+</svg>

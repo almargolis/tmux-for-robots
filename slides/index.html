@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Using the Linux screen command to organize processes</title>
+  <link rel="stylesheet" href="vendor/reveal/reveal.css">
+  <link rel="stylesheet" href="vendor/reveal/theme/black.css" id="theme">
+  <link rel="stylesheet" href="vendor/plugin/highlight/monokai.css">
+  <link rel="stylesheet" href="custom.css">
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- 1 ─────────────────────────────────────────────────────────────────── -->
+<section class="center title-slide" data-background-color="#0d1117">
+  <div class="kicker">hbrobotics.org · monthly meeting</div>
+  <h1>Using the Linux <span class="accent">screen</span> command<br>to organize processes</h1>
+  <p class="subtitle">...which is really a talk about <strong>tmux</strong>, a little about
+  <strong>herdr</strong>, and why your robot's processes should not die when the wifi does.</p>
+  <div class="meta">15 minutes · live examples · everything is in the repo</div>
+  <aside class="notes">
+    Timing: 0:00–0:30. Introduce yourself briefly. Say the announced title out
+    loud, then: "screen is the right idea. I want to show you the version of
+    that idea that is easier to live with, and the one place where the idea
+    still fails: running it on the wrong machine."
+
+    Housekeeping: the repo has the slides and every example. The live demos
+    are real; if one fails, the fallback screenshots are in the notes.
+  </aside>
+</section>
+
+<!-- 2 ─────────────────────────────────────────────────────────────────── -->
+<section>
+  <h2>The ten-window problem</h2>
+  <div class="cols wide-left">
+    <div class="term">
+      <div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="name">robot — ssh — 10 tabs open</span></div>
+      <div class="body"><span class="prompt">you@laptop ~ %</span> ssh robot
+<span class="dim">robot:~$</span> ros2 launch create_bringup create_2.launch
+<span class="dim">[create_driver-1] started</span>
+
+<span class="prompt">you@laptop ~ %</span> ssh robot
+<span class="dim">robot:~$</span> ros2 launch ldlidar_stl_ros2 ld06.launch.py
+<span class="dim">[ld06] publishing /scan</span>
+
+<span class="prompt">you@laptop ~ %</span> ssh marvin
+<span class="dim">marvin:~$</span> v4l2-ctl -d /dev/video0 -p 5
+<span class="dim">marvin:~$</span> ros2 run v4l2_camera v4l2_camera_node
+
+<span class="dim">... six more windows, six more commands ...</span>
+
+<span class="err">Connection to robot closed.</span>
+<span class="err">Connection to marvin closed.</span>
+<span class="err">Connection to atlas closed.</span>
+</div>
+    </div>
+    <div>
+      <div class="big">10 ssh sessions.<br>1 wifi drop.<br><span class="red">0 survivors.</span></div>
+      <p class="small" style="margin-top:1em">Every process you launch over SSH is a child of
+      <code>sshd</code> on the robot. When the link drops, <code>sshd</code> hangs up.
+      The children get <code>SIGHUP</code>.</p>
+      <p class="small muted">Pasting commands from a cheat sheet is the same failure mode
+      with extra steps: the launch sequence lives in a scrollback buffer.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    Timing: 0:30–2:00. Ask for a show of hands: "Who has more than five ssh
+    windows open right now?" and "Who has lost a running process to a wifi
+    drop?" Most hands.
+
+    The key sentence: your process's parent is the sshd on the robot, not your
+    laptop. Kill the connection, sshd kills the children.
+
+    Do not blame the audience. This is the default behaviour of the tools.
+  </aside>
+</section>
+
+<!-- 3 ─────────────────────────────────────────────────────────────────── -->
+<section>
+  <h2>First, credit where it's due</h2>
+  <div class="cols">
+    <div>
+      <p><strong>GNU screen</strong> got the model right in 1987: a server owns
+      the processes; your terminal is just a client.</p>
+      <pre><code class="language-bash" data-trim>screen -S navigator     # start a named session
+screen -ls              # list sessions
+screen -r navigator     # attach
+Ctrl-a d                # detach
+
+screen -S navigator -X stuff $'python -m vnavsrun.navigator node\n'</code></pre>
+      <p class="small muted">And the real <code>robocars2026/launch/</code> framework
+      already does this: one session per node, ordered startup, and a shell that
+      stays open after a crash.</p>
+    </div>
+    <div class="panel">
+      <h3>The idea is not the problem</h3>
+      <p class="small">The problem is the <em>interface to the idea</em>:</p>
+      <ul class="small">
+        <li>One session per process is a list, not a picture.</li>
+        <li>Panes need plugins or awkward key bindings.</li>
+        <li>No mouse, no clickable borders, no scroll wheel.</li>
+        <li>The "launch system" is still a human pasting text.</li>
+      </ul>
+      <p class="small accent">tmux is the same idea with better ergonomics — and
+      a scripting interface that is pleasant to read.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    Timing: 2:00–3:00. Be generous to screen. The audience may be using it.
+    The real robot's _launch_common.sh is a good example, not a strawman.
+
+    If someone says "screen can do panes with a plugin", agree: it can, and
+    then you spend the next ten minutes configuring it.
+  </aside>
+</section>
+
+<!-- 4 ─────────────────────────────────────────────────────────────────── -->
+<section>
+  <h2>The mental model</h2>
+  <img src="img/architecture.svg" alt="A laptop SSH client connecting to a tmux server on a robot, with a session containing windows and panes" style="width:100%; max-height:350px;">
+  <div class="cols" style="margin-top:0.3em">
+    <div class="quote">The client is disposable. The server owns the processes.</div>
+    <div class="small muted">Session = a named workspace. Window = a tab. Pane = a split.
+    <code>tmux ls</code> lists sessions; <code>tmux attach -t robot</code> gives you a new client.</div>
+  </div>
+  <aside class="notes">
+    Timing: 3:00–4:30. Draw the hierarchy with your hands: one server per user,
+    sessions inside it, windows inside a session, panes inside a window.
+
+    Emphasise: closing the terminal does not stop the server. That is the whole
+    trick. Everything else is ergonomics.
+
+    "Disposable client" is the phrase to repeat.
+  </aside>
+</section>
+
+<!-- 5 ─────────────────────────────────────────────────────────────────── -->
+<section>
+  <h2>tmux in 60 seconds</h2>
+  <div class="cols wide-left">
+    <div>
+      <table>
+        <tr><th>What</th><th>Command</th></tr>
+        <tr><td>Start a named session</td><td><code>tmux new -s robot</code></td></tr>
+        <tr><td>List sessions</td><td><code>tmux ls</code></td></tr>
+        <tr><td>Attach</td><td><code>tmux attach -t robot</code></td></tr>
+        <tr><td>Detach</td><td><code>Ctrl-b d</code></td></tr>
+        <tr><td>New window</td><td><code>Ctrl-b c</code></td></tr>
+        <tr><td>Split right / down</td><td><code>Ctrl-b %</code> · <code>Ctrl-b "</code></td></tr>
+        <tr><td>Move / zoom a pane</td><td><code>Ctrl-b arrow</code> · <code>Ctrl-b z</code></td></tr>
+        <tr><td>Kill the session</td><td><code>tmux kill-session -t robot</code></td></tr>
+      </table>
+      <p class="small" style="margin-top:0.5em"><code>Ctrl-b</code> is the prefix:
+      press it, release, then one more key. <code>Ctrl-b ?</code> shows every binding.</p>
+    </div>
+    <div class="panel">
+      <h3>If you know screen</h3>
+      <table class="small">
+        <tr><td>screen</td><td>tmux</td></tr>
+        <tr><td><code>screen -S x</code></td><td><code>tmux new -s x</code></td></tr>
+        <tr><td><code>screen -r x</code></td><td><code>tmux attach -t x</code></td></tr>
+        <tr><td><code>Ctrl-a d</code></td><td><code>Ctrl-b d</code></td></tr>
+        <tr><td><code>Ctrl-a c</code></td><td><code>Ctrl-b c</code></td></tr>
+        <tr><td><code>-X stuff</code></td><td><code>send-keys</code></td></tr>
+      </table>
+    </div>
+  </div>
+  <aside class="notes">
+    Timing: 4:30–5:30. Do not read the table. Say: "You need four things today:
+    new, ls, attach, detach. The rest is muscle memory."
+
+    Mention that tmux is in every distro's package manager and usually already
+    installed on the robot image.
+  </aside>
+</section>
+
+<!-- 6 ─────────────────────────────────────────────────────────────────── -->
+<section>
+  <h2>Live: the 30-second proof</h2>
+  <div class="cols">
+    <div>
+      <ol class="steps">
+        <li>Create a session with two counters and a shell.</li>
+        <li>Watch the numbers climb.</li>
+        <li>Detach: <code>Ctrl-b d</code>. Close the window.</li>
+        <li>New terminal. <code>tmux attach -t demo</code>.</li>
+      </ol>
+      <p class="big" style="font-size:0.95em; margin-top:0.7em">The counters did not restart.<br>
+      They did not pause.<br><span class="accent">They never knew you left.</span></p>
+      <div class="huge-command">cd examples/01_tmux_by_hand &amp;&amp; ./try_it.sh</div>
+    </div>
+    <div class="term">
+      <div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="name">demo — after reattaching</span></div>
+      <div class="body"><span class="dim">0 · sensor loop</span>
+<span class="ok">sensor reading  48   21:14:02</span>
+<span class="ok">sensor reading  49   21:14:03</span>
+<span class="dim">1 · camera loop</span>
+<span class="ok">camera frame    24   21:14:02</span>
+<span class="dim">2 · a normal shell</span>
+This shell is inside tmux. Try: ls, then Ctrl-b d.
+<span class="prompt">[demo] ~ $</span> <span class="dim">_</span>
+</div>
+    </div>
+  </div>
+  <aside class="notes">
+    Timing: 5:30–7:30. RUN THE DEMO. Commands:
+      cd examples/01_tmux_by_hand
+      ./try_it.sh
+
+    Point at the counters. Detach with Ctrl-b d. Close the terminal window
+    entirely. Count to five. Open a new terminal:
+      tmux ls
+      tmux attach -t demo
+    The counters are higher.
+
+    If TTY or tmux misbehaves: the right-hand screenshot is the fallback. Say
+    "this is what it looks like" and move on. Do not debug live for more than
+    20 seconds.
+  </aside>
+</section>
+
+<!-- 7 ─────────────────────────────────────────────────────────────────── -->
+<section>
+  <h2>One robot. One screen. One command.</h2>
+  <div class="cols wide-left">
+    <div>
+      <pre><code class="language-bash" data-trim>SESSION=robot
+tmux new-session -d -s "$SESSION" -n robot -c ~/robot
+tmux split-window  -t "$SESSION:" -c ~/robot
+tmux select-layout -t "$SESSION:" tiled
+tmux attach -t "$SESSION"          # or Ctrl-b d and walk away</code></pre>
+      <h3 style="margin-top:0.7em">The part that matters after a crash</h3>
+      <pre><code class="language-bash" data-trim>python3 camera.py          # the node runs
+ec=$?                      # it dies (USB cable, bug, OOM)
+printf '[camera] exited %s\n' "$ec"
+exec bash --rcfile ~/.robot.rc   # prompt + history</code></pre>
+    </div>
+    <div>
+      <div class="panel">
+        <h3>Three rules</h3>
+        <ol class="small">
+          <li><strong>One pane per process.</strong> The layout is the status display.</li>
+          <li><strong>Keep the pane.</strong> A crash should leave evidence and a prompt, not a closed window.</li>
+          <li><strong>Start it with one command.</strong> If the launch sequence is in your paste buffer, it is not reproducible.</li>
+        </ol>
+      </div>
+      <div class="huge-command" style="font-size:0.55em">cd examples/02_tmux_robot<br>CAMERA_ARGS="--crash-after 20" ./robot_up.sh</div>
+    </div>
+  </div>
+  <aside class="notes">
+    Timing: 7:30–8:30. Switch to the terminal and start the robot headless or
+    tethered:
+      cd examples/02_tmux_robot
+      CAMERA_ARGS="--crash-after 20" ./robot_up.sh
+    Show the tiled panes. Wait for the camera to die (20 s), or point at the
+    wrapper message. Then attach to the camera pane and press Up-arrow to
+    re-run it.
+
+    If short on time, skip the live crash and just show the panes.
+  </aside>
+</section>
+
+<!-- 8 ─────────────────────────────────────────────────────────────────── -->
+<section>
+  <h2>Order is a dependency, not a <code>sleep</code></h2>
+  <div class="cols">
+    <div>
+      <pre><code class="language-bash" data-trim>./launch_broker            # first
+./launch_lidar             # waits for :7777
+./launch_camera            # waits for :7777
+./launch_navigator         # waits for :7777
+./launch_motors            # waits for :7777</code></pre>
+      <p class="small">Each script waits for the port to <em>answer</em>, not for a
+      guessed number of seconds. For ROS, wait for the topic instead — the
+      Smarty example does exactly that.</p>
+      <pre><code class="language-bash" data-trim>NEEDS_PORT=7777
+source _launch_common.sh   # the wait + the wrapper live here</code></pre>
+    </div>
+    <div>
+      <table>
+        <tr><th></th><th>Tethered</th><th>Headless</th></tr>
+        <tr><td>teleop</td><td>yes</td><td>skipped</td></tr>
+        <tr><td>attaches</td><td>yes</td><td>no</td></tr>
+        <tr><td>logs</td><td>screen</td><td>screen + files</td></tr>
+        <tr><td>started by</td><td>a human</td><td>cron / systemd</td></tr>
+      </table>
+      <p class="small muted">Same script. It decides from whether stdin/stdout
+      are a terminal, or you pass <code>--tethered</code> / <code>--headless</code>.</p>
+      <div class="panel">
+        <h3>Boot-time, the grown-up way</h3>
+        <pre style="font-size:0.5em; margin:0"><code class="language-ini" data-trim>[Service]
+ExecStart=.../robot_up.sh --headless
+ExecStop=.../robot_down.sh
+RemainAfterExit=yes</code></pre>
+      </div>
+    </div>
+  </div>
+  <aside class="notes">
+    Timing: 8:30–10:00. The launch-order point is the one the audience most
+    needs after "use tmux": a broker is not ready when the process starts, it
+    is ready when it accepts connections.
+
+    Ask: "Who has a sleep 5 in a launch script?" Lots of hands. This is the
+    fix.
+
+    Tethered/headless matters because the same robot is sometimes on the bench
+    with a keyboard and sometimes at boot with nobody around.
+  </aside>
+</section>
+
+<!-- 9 ─────────────────────────────────────────────────────────────────── -->
+<section>
+  <h2>Smarty: the cheat sheet becomes a script</h2>
+  <div class="cols">
+    <div>
+      <h3 style="color:var(--red)">Before</h3>
+      <div class="term" style="font-size:0.40em">
+        <div class="bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="name">Smarty.md + ten terminals</span></div>
+        <div class="body">ssh mockbot → ros2 launch create_bringup create_2.launch
+ssh mockbot → ros2 launch ldlidar_stl_ros2 ld06.launch.py
+ssh marvin  → v4l2-ctl -d /dev/video0 -p 5
+ssh marvin  → ros2 run v4l2_camera v4l2_camera_node
+ssh atlas   → ros2 run py_pubsub talker
+...
+ros2 launch sam_bot_description display.launch.py
+ros2 launch slam_toolbox online_async_launch.py
+ros2 launch turtlebot4_navigation slam.launch.py sync:=false
+ros2 launch nav2_bringup rviz_launch.py
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
+ros2 run nav2_map_server map_saver_cli -f ~/maps/map ...</div>
+      </div>
+    </div>
+    <div>
+      <h3>After</h3>
+      <div class="huge-command" style="font-size:0.72em">./smarty.sh mapping</div>
+      <table class="small">
+        <tr><th>window</th><th>panes</th></tr>
+        <tr><td><code>robot</code></td><td>base · lidar</td></tr>
+        <tr><td><code>sensors</code></td><td>camera · talker</td></tr>
+        <tr><td><code>slam</code></td><td>display · toolbox · turtlebot · rviz</td></tr>
+        <tr><td><code>drive</code></td><td>teleop · <span class="amber">map-saver (ready)</span></td></tr>
+      </table>
+      <p class="small">The map saver is a shell with the command in history.
+      When the map looks good, focus it, press <strong>Up-arrow</strong>, Enter.</p>
+      <p class="small muted">Profiles: <code>mapping</code> and <code>navigation</code>.
+      Hosts, map paths, and commands live in one <code>smarty.conf</code>.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    Timing: 10:00–11:30. This is the slide for the person who maintains
+    Smarty.md. The before list is deliberately recognisable.
+
+    Emphasise: the cheat sheet is still useful — it is now the source for a
+    script you can review, diff, and fix once instead of pasting ten times.
+
+    If asked about the remote hosts: each pane ssh's to the host that owns the
+    process. The next slide is the catch.
+  </aside>
+</section>
+
+<!-- 10 ────────────────────────────────────────────────────────────────── -->
+<section>
+  <h2>Where does tmux have to run?</h2>
+  <img src="img/where-tmux.svg" alt="Three cases: tmux only on the laptop (remote processes die), tmux on the robot (survives), both (recommended)" style="width:100%; max-height:320px;">
+  <div class="cols" style="margin-top:0.2em">
+    <div class="big" style="font-size:1.0em">Put tmux where the <span class="accent">processes</span> are.</div>
+    <div class="small muted">A tmux pane on your laptop that is running <code>ssh robot</code> is
+    still just an SSH client. It can show you the disconnect; it cannot prevent it.
+    Use tmux (or systemd) on the robot for survival, and tmux on the laptop for
+    <em>visibility</em>.</div>
+  </div>
+  <aside class="notes">
+    Timing: 11:30–13:00. Slow down here. This is the intellectual core.
+
+    The failure mode people miss: they put tmux on the laptop, feel organised,
+    and are surprised when the robot process still dies. The parent is sshd on
+    the robot.
+
+    Practical recipe: robot runs tmux (or a systemd unit). Laptop connects and
+    attaches when it wants. For multi-robot work, laptop tmux holds the
+    different ssh views.
+
+    Mention: tmux does not survive a reboot. systemd does. Use both.
+  </aside>
+</section>
+
+<!-- 11 ────────────────────────────────────────────────────────────────── -->
+<section>
+  <h2>herdr: when the panes are for an agent</h2>
+  <div class="cols wide-left">
+    <div class="herdr">
+      <div class="side">
+        <div class="head">WORKSPACES</div>
+        <div class="ws">▾ robot-sim</div>
+        <div class="agent work">● broker</div>
+        <div class="agent work">● lidar</div>
+        <div class="agent block">■ navigator</div>
+        <div class="agent done">✓ camera</div>
+        <div class="agent work">● motors</div>
+        <div class="ws" style="margin-top:16px">▸ other-project</div>
+        <div class="head" style="margin-top:16px">SESSION</div>
+        <div class="agent">default · 2 tabs</div>
+      </div>
+      <div class="pane-grid">
+        <div class="pane"><div class="label">broker</div><div class="line">READY :7777</div><div class="line">+ lidar connected</div><div class="line">+ camera connected</div></div>
+        <div class="pane"><div class="label">lidar</div><div class="line">front 212.3 cm</div><div class="line">front 198.0 cm</div><div class="line">front 184.2 cm</div></div>
+        <div class="pane"><div class="label">motors</div><div class="line">^^ speed 66</div><div class="line">^^ speed 58</div><div class="line">WATCHDOG armed</div></div>
+        <div class="pane"><div class="label">camera <span class="red">exited</span></div><div class="line">OSError: /dev/video0</div><div class="line">No such device</div><div class="line">[camera] $ _</div></div>
+      </div>
+    </div>
+    <div>
+      <p class="small">A terminal workspace manager built for coding agents.
+      Same client/server idea as tmux, plus a sidebar that knows which pane
+      contains an agent and whether it is <span class="accent">working</span>,
+      <span class="red">blocked</span>, or <span class="blue">done</span>.</p>
+      <pre><code class="language-bash" data-trim>herdr pane list
+herdr pane read w1:p4
+herdr agent prompt reviewer \
+  "Which node is stuck?"</code></pre>
+      <p class="tiny muted">Start the agent first with
+      <code>herdr agent start reviewer --pane w1:p6</code>.
+      New (0.9.x), Linux/macOS. Install it on the robot and the
+      laptop if you want the sidebar there. tmux remains the universal fallback;
+      herdr is the version where the multiplexer is an API an agent can drive.</p>
+    </div>
+  </div>
+  <aside class="notes">
+    Timing: 13:00–14:30. Optional live demo if time allows:
+      cd examples/herdr && ./robot_herdr.sh
+      herdr
+    Click the robot-sim workspace. Show the sidebar, click panes, show the
+    camera pane that exited.
+
+    Then, if an agent is installed:
+      herdr agent start reviewer --kind claude --pane <spare pane>
+      herdr agent prompt reviewer "Which node is stuck?"
+    Show that the agent can read the other panes because the panes are an API.
+
+    If herdr is not installed on the demo machine, stay on this slide and show
+    the CLI. Do not install live.
+  </aside>
+</section>
+
+<!-- 12 ────────────────────────────────────────────────────────────────── -->
+<section>
+  <h2>Take one thing home</h2>
+  <div class="cols">
+    <div>
+      <div class="huge-command">tmux new -s robot</div>
+      <div class="huge-command">tmux attach -t robot</div>
+      <div class="huge-command">Ctrl-b d</div>
+      <p class="small">That is enough to stop losing work to a wifi drop — if
+      the session runs on the machine doing the work.</p>
+      <h3 style="margin-top:0.7em">Then steal the pattern</h3>
+      <p class="small">One script. One session. One pane per process. A real
+      readiness check. A pane that survives a crash.</p>
+      <div class="quote" style="margin-top:0.6em; font-size:0.7em">Questions — especially:
+      what would you automate first?</div>
+    </div>
+    <div class="panel">
+      <h3>Try it this week</h3>
+      <pre style="font-size:0.46em; margin:0"><code class="language-bash" data-trim>git clone &lt;repo-url&gt;
+cd tmux-for-robots/examples/01_tmux_by_hand
+./try_it.sh
+
+cd ../02_tmux_robot
+./robot_up.sh</code></pre>
+      <p class="small" style="margin-top:0.6em">Read <code>smarty/</code> for the
+      cheat-sheet-to-script translation, and <code>examples/herdr/</code> for the
+      agent version.</p>
+      <p class="tiny muted">Slides: <code>slides/index.html</code> · press
+      <code>S</code> for speaker notes · <code>?</code> for help</p>
+    </div>
+  </div>
+  <aside class="notes">
+    Timing: 14:30–15:00. Close on the one-sentence version:
+    "tmux is how you stop losing processes to a dropped connection; put it on
+    the machine that owns the processes."
+
+    Point at the repo. Say the examples are standalone: only Python and tmux,
+    no ROS required. Invite them to bring a robot launch script to the next
+    meeting and turn it into one command together.
+
+    If questions run long, the herdr slide is the one to cut short.
+  </aside>
+</section>
+
+</div>
+</div>
+
+<script src="vendor/reveal/reveal.js"></script>
+<script src="vendor/plugin/highlight/highlight.js"></script>
+<script src="vendor/plugin/notes/notes.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    slideNumber: 'c/t',
+    transition: 'fade',
+    transitionSpeed: 'fast',
+    controls: true,
+    progress: true,
+    center: false,
+    margin: 0.04,
+    width: 1280,
+    height: 720,
+    plugins: [RevealHighlight, RevealNotes]
+  });
+</script>
+</body>
+</html>

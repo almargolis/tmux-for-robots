@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+#
+# Start the camera node in a detached session "camera" (-f: run here).
+# Waits for the broker. Try CAMERA_ARGS="--crash-after 20" to see a crash.
+# See _launch_common.sh for how it works.
+#
+SESSION=camera
+NODE_CMD="python3 camera.py ${CAMERA_ARGS:-}"
+NEEDS_PORT=${MINIBUS_PORT:-7777}              # wait for the broker
+# shellcheck source=_launch_common.sh
+source "$(dirname "${BASH_SOURCE[0]}")/_launch_common.sh"

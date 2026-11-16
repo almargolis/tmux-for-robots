@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+#
+# Show which nodes are running. "running" means the pane has a live child
+# process; "EXITED" means the node died and the wrapper left you a shell.
+#
+set -uo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+MUX="${MUX:-tmux}"
+# shellcheck source=_screen_session.sh
+source "$HERE/_screen_session.sh"
+
+for SESSION in broker lidar camera navigator motors teleop; do
+    if [ "$MUX" = screen ]; then
+        if screen_has_session "$SESSION"; then
+            printf '%-10s running   (screen -r %s)\n' "$SESSION" "$SESSION"
+        else
+            printf '%-10s -\n' "$SESSION"
+        fi
+    elif tmux has-session -t "=$SESSION" 2>/dev/null; then
+        pane_pid=$(tmux list-panes -t "=$SESSION:" -F '#{pane_pid}' | head -1)
+        kids=$(pgrep -P "$pane_pid" 2>/dev/null | wc -l | tr -d ' ')
+        if [ "${kids:-0}" -gt 0 ]; then
+            printf '%-10s running   (tmux attach -t %s)\n' "$SESSION" "$SESSION"
+        else
+            printf '%-10s EXITED    (tmux attach -t %s -- read the traceback, Up-arrow re-runs)\n' \
+                "$SESSION" "$SESSION"
+        fi
+    else
+        printf '%-10s -\n' "$SESSION"
+    fi
+done

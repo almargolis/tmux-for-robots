@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 440" font-family="ui-monospace, SFMono-Regular, Menlo, monospace">
+  <!-- case A -->
+  <g>
+    <rect x="20" y="20" width="360" height="390" rx="12" fill="#161b22" stroke="#f85149" stroke-width="2"/>
+    <text x="200" y="55" text-anchor="middle" fill="#f85149" font-size="18" font-weight="700">tmux on the laptop only</text>
+    <rect x="45" y="80" width="150" height="90" rx="8" fill="#0d1117" stroke="#8ab4f8"/>
+    <text x="120" y="118" text-anchor="middle" fill="#8ab4f8" font-size="14">laptop</text>
+    <text x="120" y="140" text-anchor="middle" fill="#8b949e" font-size="12">tmux server</text>
+    <line x1="195" y1="125" x2="250" y2="125" stroke="#f85149" stroke-width="3" stroke-dasharray="6 5"/>
+    <text x="222" y="112" text-anchor="middle" fill="#f85149" font-size="20">×</text>
+    <rect x="255" y="80" width="105" height="90" rx="8" fill="#0d1117" stroke="#30363d"/>
+    <text x="307" y="118" text-anchor="middle" fill="#8b949e" font-size="14">robot</text>
+    <text x="307" y="140" text-anchor="middle" fill="#8b949e" font-size="12">ssh children</text>
+    <text x="200" y="215" text-anchor="middle" fill="#f85149" font-size="16">wifi drops → sshd hangs up</text>
+    <text x="200" y="240" text-anchor="middle" fill="#f85149" font-size="16">→ the robot processes die</text>
+    <text x="200" y="285" text-anchor="middle" fill="#8b949e" font-size="13">The tmux panes survive,</text>
+    <text x="200" y="306" text-anchor="middle" fill="#8b949e" font-size="13">but they are only showing you</text>
+    <text x="200" y="327" text-anchor="middle" fill="#8b949e" font-size="13">the disconnection.</text>
+  </g>
+
+  <!-- case B -->
+  <g>
+    <rect x="420" y="20" width="360" height="390" rx="12" fill="#161b22" stroke="#66d9a6" stroke-width="2"/>
+    <text x="600" y="55" text-anchor="middle" fill="#66d9a6" font-size="18" font-weight="700">tmux on the robot</text>
+    <rect x="445" y="80" width="115" height="90" rx="8" fill="#0d1117" stroke="#30363d"/>
+    <text x="502" y="118" text-anchor="middle" fill="#8b949e" font-size="14">laptop</text>
+    <text x="502" y="140" text-anchor="middle" fill="#8b949e" font-size="12">may vanish</text>
+    <line x1="560" y1="125" x2="610" y2="125" stroke="#66d9a6" stroke-width="3"/>
+    <text x="585" y="112" text-anchor="middle" fill="#66d9a6" font-size="18">✓</text>
+    <rect x="615" y="70" width="145" height="130" rx="8" fill="#0d1117" stroke="#66d9a6"/>
+    <text x="687" y="100" text-anchor="middle" fill="#66d9a6" font-size="14">robot</text>
+    <text x="687" y="124" text-anchor="middle" fill="#66d9a6" font-size="12">tmux server</text>
+    <text x="687" y="150" text-anchor="middle" fill="#8b949e" font-size="12">processes keep</text>
+    <text x="687" y="168" text-anchor="middle" fill="#8b949e" font-size="12">running</text>
+    <text x="600" y="235" text-anchor="middle" fill="#66d9a6" font-size="16">Reconnect: ssh robot</text>
+    <text x="600" y="260" text-anchor="middle" fill="#66d9a6" font-size="16">tmux attach -t robot</text>
+    <text x="600" y="305" text-anchor="middle" fill="#8b949e" font-size="13">Everything is still there.</text>
+    <text x="600" y="326" text-anchor="middle" fill="#8b949e" font-size="13">This is the one that solves</text>
+    <text x="600" y="347" text-anchor="middle" fill="#8b949e" font-size="13">the wifi problem.</text>
+  </g>
+
+  <!-- case C -->
+  <g>
+    <rect x="820" y="20" width="360" height="390" rx="12" fill="#161b22" stroke="#ffb454" stroke-width="2"/>
+    <text x="1000" y="55" text-anchor="middle" fill="#ffb454" font-size="18" font-weight="700">both (recommended)</text>
+    <rect x="845" y="80" width="140" height="100" rx="8" fill="#0d1117" stroke="#ffb454"/>
+    <text x="915" y="112" text-anchor="middle" fill="#ffb454" font-size="13">laptop tmux</text>
+    <text x="915" y="134" text-anchor="middle" fill="#8b949e" font-size="11">watch many hosts</text>
+    <text x="915" y="154" text-anchor="middle" fill="#8b949e" font-size="11">organise views</text>
+    <line x1="985" y1="130" x2="1030" y2="130" stroke="#ffb454" stroke-width="3"/>
+    <rect x="1035" y="75" width="120" height="150" rx="8" fill="#0d1117" stroke="#ffb454"/>
+    <text x="1095" y="105" text-anchor="middle" fill="#ffb454" font-size="13">robot tmux</text>
+    <text x="1095" y="128" text-anchor="middle" fill="#8b949e" font-size="11">or systemd</text>
+    <text x="1095" y="150" text-anchor="middle" fill="#8b949e" font-size="11">owns the</text>
+    <text x="1095" y="170" text-anchor="middle" fill="#8b949e" font-size="11">processes</text>
+    <text x="1095" y="192" text-anchor="middle" fill="#66d9a6" font-size="11">survives</text>
+    <text x="1000" y="255" text-anchor="middle" fill="#ffb454" font-size="15">Views on the laptop.</text>
+    <text x="1000" y="278" text-anchor="middle" fill="#ffb454" font-size="15">Processes on the robot.</text>
+    <text x="1000" y="320" text-anchor="middle" fill="#8b949e" font-size="13">Works with one robot or ten,</text>
+    <text x="1000" y="341" text-anchor="middle" fill="#8b949e" font-size="13">and survives either end</text>
+    <text x="1000" y="362" text-anchor="middle" fill="#8b949e" font-size="13">rebooting.</text>
+  </g>
+</svg>

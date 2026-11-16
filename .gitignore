@@ -1,0 +1,16 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Example run artifacts
+examples/02_tmux_robot/logs/
+smarty/smarty.conf
+*.log
+
+# Editors
+.idea/
+.vscode/
+*.swp

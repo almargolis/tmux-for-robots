@@ -1,0 +1,23 @@
+# Example systemd *user* service: start the tmux robot at boot.
+#
+#   mkdir -p ~/.config/systemd/user
+#   cp robot.service ~/.config/systemd/user/
+#   # edit the paths below, then:
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now robot.service
+#   sudo loginctl enable-linger $USER      # start at boot, even before you log in
+#
+# Look at it any time:   ssh robot   then   tmux attach -t robot
+
+[Unit]
+Description=Pretend robot in a tmux session
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/home/pi/tmux-for-robots/examples/02_tmux_robot/robot_up.sh --headless
+ExecStop=/home/pi/tmux-for-robots/examples/02_tmux_robot/robot_down.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+#
+# Start the lidar node in a detached session "lidar" (-f: run here).
+# Waits for the broker before starting.
+# See _launch_common.sh for how it works.
+#
+SESSION=lidar
+NODE_CMD="python3 lidar.py"
+NEEDS_PORT=${MINIBUS_PORT:-7777}              # wait for the broker
+# shellcheck source=_launch_common.sh
+source "$(dirname "${BASH_SOURCE[0]}")/_launch_common.sh"
