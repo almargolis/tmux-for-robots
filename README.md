@@ -18,7 +18,7 @@ without risking a real one.
 ## Quick start (60 seconds)
 
 ```bash
-git clone <this-repo-url>
+git clone https://github.com/almargolis/tmux-for-robots.git
 cd tmux-for-robots
 
 # 1. Watch counters keep running after you detach and close the terminal.
@@ -138,7 +138,7 @@ The deck is plain static HTML. To host it on GitHub Pages:
 3. The included workflow ([`.github/workflows/pages.yml`](.github/workflows/pages.yml))
    publishes `slides/` on every push to `main`.
 
-The deck then lives at `https://<your-org>.github.io/tmux-for-robots/`.
+The deck then lives at `https://almargolis.github.io/tmux-for-robots/`.
 
 ## Credits
 

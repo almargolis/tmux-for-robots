@@ -102,6 +102,7 @@
 .cols > * { min-width: 0; }
 .cols.wide-left { grid-template-columns: 1.25fr 0.75fr; }
 .cols.wide-right { grid-template-columns: 0.75fr 1.25fr; }
+.cols.home { grid-template-columns: 0.85fr 1.15fr; }
 .cols.three { grid-template-columns: 1fr 1fr 1fr; }
 
 .panel {
