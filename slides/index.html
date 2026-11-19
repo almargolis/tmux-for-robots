@@ -173,6 +173,13 @@ screen -S navigator -X stuff $'python -m vnavsrun.navigator node\n'</code></pre>
 
     Mention that tmux is in every distro's package manager and usually already
     installed on the robot image.
+
+    Homework, for anyone who wants the video version of this slide:
+    "you need to learn tmux RIGHT NOW!!" by NetworkChuck --
+    https://youtu.be/nTqu6w2wc68
+    Enthusiastic, and it demos the same four commands plus a lot more. Say it
+    as a pointer, not a prerequisite: nobody needs the extra bindings on a
+    robot, and we are about to show the two that matter.
   </aside>
 </section>
 
@@ -182,12 +189,12 @@ screen -S navigator -X stuff $'python -m vnavsrun.navigator node\n'</code></pre>
   <div class="cols">
     <div>
       <ol class="steps">
-        <li>Create a session with two counters and a shell.</li>
-        <li>Watch the numbers climb.</li>
+        <li>Create a session with two programs printing and a shell.</li>
+        <li>Watch the readings climb.</li>
         <li>Detach: <code>Ctrl-b d</code>. Close the window.</li>
         <li>New terminal. <code>tmux attach -t demo</code>.</li>
       </ol>
-      <p class="big" style="font-size:0.95em; margin-top:0.7em">The counters did not restart.<br>
+      <p class="big" style="font-size:0.95em; margin-top:0.7em">The readings did not restart.<br>
       They did not pause.<br><span class="accent">They never knew you left.</span></p>
       <div class="huge-command">cd examples/01_tmux_by_hand &amp;&amp; ./try_it.sh</div>
     </div>
@@ -209,11 +216,16 @@ This shell is inside tmux. Try: ls, then Ctrl-b d.
       cd examples/01_tmux_by_hand
       ./try_it.sh
 
-    Point at the counters. Detach with Ctrl-b d. Close the terminal window
+    Point at the readings. Detach with Ctrl-b d. Close the terminal window
     entirely. Count to five. Open a new terminal:
       tmux ls
       tmux attach -t demo
-    The counters are higher.
+    The readings are higher.
+
+    Ten-second extra if the room is with you: click the sensor pane and press
+    any key. It raises on purpose, the traceback stays on screen, and the pane
+    hands you a prompt -- ./sensor.py starts it again. Do not over-explain it;
+    slide 7 is where it pays off.
 
     If TTY or tmux misbehaves: the right-hand screenshot is the fallback. Say
     "this is what it looks like" and move on. Do not debug live for more than
@@ -257,6 +269,10 @@ exec bash --rcfile ~/.robot.rc   # prompt + history</code></pre>
     Show the tiled panes. Wait for the camera to die (20 s), or point at the
     wrapper message. Then attach to the camera pane and press Up-arrow to
     re-run it.
+
+    If the robot is already up or time is short, the 'demo' session from
+    slide 6 can stand in: press a key in its camera pane, read the traceback,
+    type ./camera.py to re-launch. Same three rules, no waiting for a timer.
 
     If short on time, skip the live crash and just show the panes.
   </aside>

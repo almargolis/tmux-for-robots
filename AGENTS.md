@@ -37,6 +37,7 @@ uploads rather than TUIs. Keep examples copy-pasteable and free of prerequisites
 | `slides/custom.css` | typography, grids, overflow fixes |
 | `slides/img/*.svg` | the mental-model and "where does tmux run" diagrams |
 | `examples/robot_sim/*.py` | the pretend robot's behaviour and topics |
+| `examples/01_tmux_by_hand/sensor.py`, `camera.py` | the two pane programs that crash on a keypress |
 | `examples/02_tmux_robot/robot_up.sh` | one-session launcher, wrapper generation |
 | `examples/03_launch_dir/_launch_common.sh` | per-node launcher, wrapper generation |
 | `examples/03_launch_dir/_screen_session.sh` | GNU screen session detection/teardown |
@@ -107,10 +108,15 @@ Run from each directory. Use throwaway ports so a stray broker does not mask a
 failure.
 
 ```bash
-# 01 -- counters, detach, reattach
+# 01 -- readings, detach, crash on a keypress, re-launch
 cd examples/01_tmux_by_hand
 ./try_it.sh
 tmux list-panes -t demo:0 -F '#{pane_index} #{pane_title}'
+tmux send-keys -t demo:0.0 'x'                    # pretend to press a key
+sleep 2                                           # traceback + prompt appear
+tmux list-panes -t demo:0 -F '#{pane_index} #{pane_current_command}'
+tmux send-keys -t demo:0.0 './sensor.py' Enter    # re-launch in place
+tmux send-keys -t demo:0.1 C-c                    # polite stop: pane stays
 ./try_it.sh --stop
 
 # 02 -- one session, one pane per node, crash stays readable
@@ -143,7 +149,9 @@ cd smarty
 
 Expected smoke-test results:
 
-- 01: three panes (`sensor loop`, `camera loop`, `a normal shell`).
+- 01: three panes (`sensor loop`, `camera loop`, `a normal shell`); a keypress
+  in either program pane leaves a traceback plus a prompt; `Ctrl-C` stops a
+  program without closing its pane; re-launching prints readings from 1 again.
 - 02: six panes; `logs/camera.log` ends with `pane kept open` after a forced
   crash; `robot_down.sh` leaves no sim processes.
 - 03: five `running` entries; after `stop_all`, no sessions remain.
@@ -165,6 +173,13 @@ Expected smoke-test results:
 - Under this agent harness, `capture-pane` can render blank even when the pane
   is fine. Verify with `pipe-pane` to a file, `ps`, a listening port, or the
   headless logs — not capture alone.
+- Pane targets are `session:window.pane` (`demo:0.1`). `demo:1` means *window*
+  1 and fails with "can't find window: 1" in a single-window session.
+- `Ctrl-C` goes to the whole foreground process group. In a program-then-shell
+  wrapper the wrapper shell gets it too and the pane closes, taking the
+  traceback with it. `01_tmux_by_hand`'s generated wrapper traps `INT` and
+  resets it in a subshell so the program still stops; `02`/`03` do not, which
+  is why they ship `robot_down.sh` / `stop_all`.
 
 **GNU screen**
 

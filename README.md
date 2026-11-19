@@ -21,10 +21,11 @@ without risking a real one.
 git clone https://github.com/almargolis/tmux-for-robots.git
 cd tmux-for-robots
 
-# 1. Watch counters keep running after you detach and close the terminal.
+# 1. Watch readings keep running after you detach and close the terminal.
 cd examples/01_tmux_by_hand
 ./try_it.sh
 #    Ctrl-b d to detach, then:  tmux attach -t demo
+#    press any key in a program pane to crash it and read the traceback
 
 # 2. Start a whole fake robot: one command, one pane per process.
 cd ../02_tmux_robot
@@ -80,7 +81,7 @@ The deck is also published with GitHub Pages — see [Publishing](#publishing).
 slides/               reveal.js deck (vendored), speaker notes, diagrams
 examples/
   robot_sim/          a pretend robot: broker + 5 stdlib-only Python nodes
-  01_tmux_by_hand/    the 5-minute hands-on: sessions, panes, detach, attach
+  01_tmux_by_hand/    the 5-minute hands-on: detach, attach, crash, re-launch
   02_tmux_robot/      whole robot in one tmux session, ordered startup, logs
   03_launch_dir/      one script + one session per process (the real pattern)
   herdr/              the same robot laid out with herdr, plus an agent demo
@@ -96,7 +97,7 @@ pattern.
 
 | Example | Shape | Use it when |
 |---|---|---|
-| [`01_tmux_by_hand`](examples/01_tmux_by_hand/) | one session, three panes, typed commands | you are learning tmux, or teaching it |
+| [`01_tmux_by_hand`](examples/01_tmux_by_hand/) | one session, three panes, a crash on demand | you are learning tmux, or teaching it |
 | [`02_tmux_robot`](examples/02_tmux_robot/) | one session, one pane per node, generated wrappers | you want to *watch* the whole robot at once |
 | [`03_launch_dir`](examples/03_launch_dir/) | one session per node, `launch_*` / `stop_all` | processes need independent lifecycles |
 | [`herdr`](examples/herdr/) | herdr workspace, CLI/socket API, agent demo | you want an agent to inspect or drive the layout |
